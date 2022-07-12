@@ -24,7 +24,7 @@ def get_nbu_main_currencies_text(nbu_dict):
         {'code': 826, 'name': 'GBP', 'full_name': 'Фунт стерлінгів'},
         {'code': 985, 'name': 'PLN', 'full_name': 'Злотий'}
     ]
-    txt = ''
+    txt = 'Курс НБУ: \n\n'
     for cur in main_currencies:
         txt += f"{cur['full_name']}: {nbu_dict.get(cur['code'])['rate']} \n"
 
@@ -36,28 +36,41 @@ nbu_rates_dict = get_nbu_rates()
 # Bot instance creation
 bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 
+currency_type_buttons_callback_text = {
+        'nbu': "НБУ",
+        'interbank': "Міжбанк",
+        'banks': "Курси банкiв",
+        'cash': "Готiвковий курс"
+    }
+currency_type_buttons = \
+    [types.InlineKeyboardButton(text=v, callback_data=k) for k, v in currency_type_buttons_callback_text.items()]
 
-#  /start function handler
+
+# /start function handler
 @bot.message_handler(commands=["start"])
-def start(m, res=False):
-    bot.send_message(m.chat.id, 'Привіт. Я - бот, який допоможе тобі отримати поточні курси валют різних типів. \n'
-                                'Обери будь ласка курс, який ти бажаєш отримати:')
-
-    button_names = ["НБУ", "Міжбанк", "Курси банкiв", "Готiвковий курс"]
-    keyboard = types.InlineKeyboardMarkup()
-    for button_name in button_names:
-        keyboard.add(types.InlineKeyboardButton(text=button_name, resize_keyboard=True))
+def start(message):
+    keyboard = types.InlineKeyboardMarkup(row_width=4)
+    keyboard.add(*currency_type_buttons)
+    bot.send_message(message.chat.id,
+                     'Привіт. Я - бот, який допоможе тобі отримати поточні курси валют різних типів. \n'
+                     'Обери, будь ласка, тип курсу, який ти бажаєш отримати:', reply_markup=keyboard)
 
 
-# get user input
-@bot.message_handler(content_types=["text"])
-def handle_text(message):
-    if message.text.strip() == 'НБУ':
+@bot.message_handler(commands=["main"])
+def ask_currency_type(message):
+    keyboard = types.InlineKeyboardMarkup(row_width=4)
+    keyboard.add(*currency_type_buttons)
+    bot.send_message(message.chat.id,
+                     'Обери будь ласка тип курсу, який ти бажаєш отримати:', reply_markup=keyboard)
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_worker(call):
+    if call.data == "nbu":
         answer = get_nbu_main_currencies_text(nbu_rates_dict)
     else:
         answer = 'Я цього ще не вмію, але працюю над цим :)'
-
-    bot.send_message(message.chat.id, answer)
+    bot.send_message(call.message.chat.id, answer)
 
 
 bot.polling(none_stop=True, interval=0)
