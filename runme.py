@@ -49,7 +49,7 @@ currency_type_buttons = \
 # /start function handler
 @bot.message_handler(commands=["start"])
 def start(message):
-    keyboard = types.InlineKeyboardMarkup(row_width=4)
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
     keyboard.add(*currency_type_buttons)
     bot.send_message(message.chat.id,
                      'Привіт. Я - бот, який допоможе тобі отримати поточні курси валют різних типів. \n'
@@ -58,10 +58,10 @@ def start(message):
 
 @bot.message_handler(commands=["main"])
 def ask_currency_type(message):
-    keyboard = types.InlineKeyboardMarkup(row_width=4)
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
     keyboard.add(*currency_type_buttons)
     bot.send_message(message.chat.id,
-                     'Обери будь ласка тип курсу, який ти бажаєш отримати:', reply_markup=keyboard)
+                     'Обери, будь ласка, тип курсу, який ти бажаєш отримати:', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: True)
